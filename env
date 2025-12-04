@@ -1,0 +1,6 @@
+AWS_REGION=us-east-1
+
+COGNITO_USER_POOL_ID=us-east-1_9KYmnWgX4
+COGNITO_CLIENT_ID=4ibsho0p42d0su1vicrhco941o
+
+SNS_TOPIC_ARN=arn:aws:sns:us-east-1:381491988711:todo-reminder-topic

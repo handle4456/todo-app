@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Todo App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px 24px 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .flex {
+      display: flex;
+      gap: 20px;
+    }
+    .card {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 15px 18px 18px;
+      border: 1px solid #ddd;
+      flex: 1;
+    }
+    .card h2 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    label {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 4px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+
+    .btn {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #555;
+      min-height: 16px;
+    }
+    .status.error { color: #d00000; }
+    .status.success { color: #007b00; }
+
+    .todo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .todo-header small { color: #666; }
+
+    .todo-list {
+      margin-top: 12px;
+      max-height: 350px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .todo-item {
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      background: #fff;
+      position: relative;
+    }
+    .todo-item.done {
+      background: #e7ffe7;
+      text-decoration: line-through;
+    }
+    .todo-title {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .todo-meta {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .todo-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: #eee;
+      margin-right: 4px;
+    }
+    .badge.reminder { background: #ffe0a3; }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .top-bar span {
+      font-size: 14px;
+      color: #333;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>To - Do List</h1>
+
+  <div class="top-bar">
+    <span id="loginStatus">로그인 상태: <b>로그아웃</b></span>
+    <button class="btn btn-secondary" id="logoutBtn">로그아웃</button>
+  </div>
+
+  <div class="flex">
+    <!-- 인증 영역 -->
+    <div class="card" style="max-width: 320px;">
+      <h2>회원가입 / 로그인</h2>
+
+      <label for="email">이메일</label>
+      <input id="email" type="email" placeholder="example@yc.ac.kr" />
+
+      <label for="password">비밀번호</label>
+      <input id="password" type="password" placeholder="비밀번호" />
+
+      <button class="btn btn-primary" id="signupBtn">회원가입</button>
+      <button class="btn btn-secondary" id="loginBtn">로그인</button>
+
+      <div id="authStatus" class="status"></div>
+    </div>
+
+    <!-- Todo 영역 -->
+    <div class="card">
+      <div class="todo-header">
+        <h2>나의 Todo</h2>
+        <small>로그인 후 사용 가능</small>
+      </div>
+
+      <div>
+        <label for="todoTitle">할 일 제목</label>
+        <input id="todoTitle" type="text" placeholder="예: 캡스톤 발표 준비" />
+
+        <label for="todoDesc">상세 설명</label>
+        <textarea id="todoDesc" placeholder="필요하면 적기"></textarea>
+
+        <label for="todoDue">마감 시간 (선택)</label>
+        <input id="todoDue" type="datetime-local" />
+
+        <label for="todoRemind">리마인더 시간 (선택)</label>
+        <input id="todoRemind" type="datetime-local" />
+
+        <button class="btn btn-primary" id="addTodoBtn">Todo 추가</button>
+        <span class="status" id="todoFormStatus"></span>
+      </div>
+
+      <hr style="margin-top: 14px; margin-bottom: 10px;" />
+
+      <div class="todo-list" id="todoList">
+        <!-- Todo 항목이 여기 렌더링됨 -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ================== 설정 ==================
+  // 백엔드 주소 (EC2 퍼블릭 DNS나 ALB 도메인으로 교체)
+  const API_BASE_URL = "/api";
+ // 예: "https://your-domain.com"
+
+  // ================== 상태 변수 ==================
+  let token = localStorage.getItem("token") || null;
+
+  // ================== 공통 함수 ==================
+  function setAuthStatus(message, isError = false) {
+    const el = document.getElementById("authStatus");
+    el.textContent = message;
+    el.className = "status " + (isError ? "error" : "success");
+  }
+
+  function setTodoFormStatus(message, isError = false) {
+    const el = document.getElementById("todoFormStatus");
+    el.textContent = message;
+    el.className = "status " + (isError ? "error" : "success");
+  }
+
+  function setLoginUI() {
+    const loginStatus = document.getElementById("loginStatus");
+    if (token) {
+      loginStatus.innerHTML = '로그인 상태: <b>로그인됨</b>';
+    } else {
+      loginStatus.innerHTML = '로그인 상태: <b>로그아웃</b>';
+    }
+  }
+
+  async function apiRequest(path, options = {}) {
+    const headers = options.headers || {};
+    headers["Content-Type"] = "application/json";
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(API_BASE_URL + path, {
+      ...options,
+      headers
+    });
+
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (e) {
+      // ignore
+    }
+
+    if (!res.ok) {
+      const msg = (data && data.message) || "요청 실패";
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  // ================== 인증 관련 ==================
+  document.getElementById("signupBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      setAuthStatus("이메일과 비밀번호를 입력하세요.", true);
+      return;
+    }
+
+    try {
+      setAuthStatus("회원가입 중...");
+      const data = await apiRequest("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({ email, password })
+      });
+      token = data.token;
+      localStorage.setItem("token", token);
+      setAuthStatus("회원가입 및 로그인 성공!");
+      setLoginUI();
+      await loadTodos();
+    } catch (err) {
+      setAuthStatus(err.message, true);
+    }
+  });
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      setAuthStatus("이메일과 비밀번호를 입력하세요.", true);
+      return;
+    }
+
+    try {
+      setAuthStatus("로그인 중...");
+      const data = await apiRequest("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password })
+      });
+      token = data.token;
+      localStorage.setItem("token", token);
+      setAuthStatus("로그인 성공!");
+      setLoginUI();
+      await loadTodos();
+    } catch (err) {
+      setAuthStatus(err.message, true);
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    token = null;
+    localStorage.removeItem("token");
+    setLoginUI();
+    setAuthStatus("로그아웃 되었습니다.");
+    document.getElementById("todoList").innerHTML = "";
+  });
+
+  // ================== Todo 관련 ==================
+  async function loadTodos() {
+    if (!token) {
+      document.getElementById("todoList").innerHTML =
+        "<p style='font-size:14px;color:#777'>로그인 후 Todo를 불러올 수 있습니다.</p>";
+      return;
+    }
+    try {
+      const todos = await apiRequest("/todos");
+      renderTodos(todos);
+    } catch (err) {
+      document.getElementById("todoList").innerHTML =
+        `<p style='color:#d00000;font-size:14px;'>Todo 불러오기 실패: ${err.message}</p>`;
+    }
+  }
+
+  function formatDateTime(dtStr) {
+    if (!dtStr) return "-";
+    const d = new Date(dtStr);
+    if (isNaN(d.getTime())) return "-";
+    // 한국 시간 표시용
+    return d.toLocaleString("ko-KR");
+  }
+
+  function renderTodos(todos) {
+  const list = document.getElementById("todoList");
+  if (!todos || todos.length === 0) {
+    list.innerHTML =
+      "<p style='font-size:14px;color:#777'>등록된 Todo가 없습니다.</p>";
+    return;
+  }
+  list.innerHTML = "";
+
+  todos.forEach(todo => {
+    const item = document.createElement("div");
+    item.className = "todo-item";
+
+    const title = document.createElement("div");
+    title.className = "todo-title";
+    title.textContent = todo.title;
+
+    const meta = document.createElement("div");
+    meta.className = "todo-meta";
+
+    const dueSpan = document.createElement("span");
+    dueSpan.className = "badge";
+    dueSpan.textContent = "마감: " + formatDateTime(todo.dueAt);
+
+    const remindSpan = document.createElement("span");
+    remindSpan.className = "badge reminder";
+    remindSpan.textContent = "리마인더: " + formatDateTime(todo.remindAt);
+
+    meta.appendChild(dueSpan);
+    meta.appendChild(remindSpan);
+
+    const desc = document.createElement("div");
+    desc.style.fontSize = "13px";
+    desc.style.marginTop = "4px";
+    desc.textContent = todo.description || "";
+
+    const actions = document.createElement("div");
+    actions.className = "todo-actions";
+
+    // 🔥 삭제 버튼(완료 기능 대신)
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn btn-danger";
+    deleteBtn.textContent = "삭제"; // 이제 '삭제'만 존재함
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm("삭제하시겠습니까?")) return;
+
+      try {
+        await apiRequest(`/todos/${todo.id}`, {
+          method: "DELETE"
+        });
+        loadTodos();
+      } catch (err) {
+        alert("삭제 실패: " + err.message);
+      }
+    });
+
+    actions.appendChild(deleteBtn);
+
+    item.appendChild(title);
+    item.appendChild(meta);
+    if (todo.description) item.appendChild(desc);
+    item.appendChild(actions);
+
+    list.appendChild(item);
+  });
+}
+
+  document.getElementById("addTodoBtn").addEventListener("click", async () => {
+  if (!token) {
+    setTodoFormStatus("로그인 후 사용 가능합니다.", true);
+    return;
+  }
+
+  const title = document.getElementById("todoTitle").value.trim();
+  const description = document.getElementById("todoDesc").value.trim();
+
+  const rawDue = document.getElementById("todoDue").value;
+  const rawRemind = document.getElementById("todoRemind").value;
+
+  // 🔥 여기서 로컬 시간 → UTC로 변환해서 서버로 전송
+  const dueAt = rawDue ? new Date(rawDue).toISOString() : null;
+  const remindAt = rawRemind ? new Date(rawRemind).toISOString() : null;
+
+  if (!title) {
+    setTodoFormStatus("제목을 입력하세요.", true);
+    return;
+  }
+
+  try {
+    setTodoFormStatus("추가 중...");
+    await apiRequest("/todos", {
+      method: "POST",
+      body: JSON.stringify({ title, description, dueAt, remindAt })
+    });
+
+    document.getElementById("todoTitle").value = "";
+    document.getElementById("todoDesc").value = "";
+    document.getElementById("todoDue").value = "";
+    document.getElementById("todoRemind").value = "";
+
+    setTodoFormStatus("Todo가 추가되었습니다.");
+    loadTodos();
+  } catch (err) {
+    setTodoFormStatus("추가 실패: " + err.message, true);
+  }
+});
+
+
+  // ================== 초기 실행 ==================
+  (function init() {
+    setLoginUI();
+    if (token) {
+      loadTodos();
+    } else {
+      document.getElementById("todoList").innerHTML =
+        "<p style='font-size:14px;color:#777'>로그인 후 Todo를 불러올 수 있습니다.</p>";
+    }
+  })();
+</script>
+</body>
+</html>
